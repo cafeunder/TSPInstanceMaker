@@ -17,6 +17,7 @@ int main() {
 	// setting
 	int require_city_num = 10000;
 	int grid_size = 8;
+	bool use_improve_higher_contrast = true;
 
 	// grid size
 	int dst_width = src.size().width / grid_size;
@@ -40,7 +41,7 @@ int main() {
 
 	// calc ganma
 	double average_city_per_pixel = (1 - cv::mean(src).val[0] / 255.0);
-	double ganma = (double)require_city_num / (dst_height * dst_width) / average_city_per_pixel;
+	double ganma = (double)require_city_num / (dst_height * dst_width) / (average_city_per_pixel);
 	if (ganma < 1) { ganma = 1; }
 
 	// calc number of city per pixel
@@ -50,8 +51,7 @@ int main() {
 	for (int y = 0; y < dst_height; y++) {
 		for (int x = 0; x < dst_width; x++) {
 			int g = (int)(ganma * (1 - (ave.data[x + y*dst_width] / 255.0)));
-			// city_per_pixel[x + y*dst_width] = (int)(1 / 3.0 * g * g);
-			city_per_pixel[x + y*dst_width] = g;
+			city_per_pixel[x + y*dst_width] = (use_improve_higher_contrast) ? (int)(1 / 3.0 * g * g) : g;
 			city_num += city_per_pixel[x + y*dst_width];
 			sample_data[x + y*dst_width] = 255 - (char)(city_per_pixel[x + y*dst_width] / 10.0 * 255);
 		}
