@@ -12,7 +12,7 @@ int main() {
 	std::mt19937 mt(rnd());
 
 	// read image file
-	cv::Mat src = cv::imread("test.png", 0);
+	cv::Mat src = cv::imread("img/miku3.png", 0);
 
 	// grid size
 	int grid_size = 8;
@@ -37,14 +37,18 @@ int main() {
 
 	// calc number of city
 	int city_num = 0;
-	int ganma = 10;
+	int ganma = 15;
 	int* city_per_pixel = new int[dst_width * dst_height];
+	char* sample_data = new char[dst_width * dst_height];
 	for (int y = 0; y < dst_height; y++) {
 		for (int x = 0; x < dst_width; x++) {
-			city_per_pixel[x + y*dst_width] = ganma - (int)((ganma + 1) * (ave.data[x + y*dst_width] / 255.0));
+			int g = ganma - (int)((ganma + 1) * (ave.data[x + y*dst_width] / 255.0));
+			city_per_pixel[x + y*dst_width] = (int)(1 / 3.0 * g * g);
 			city_num += city_per_pixel[x + y*dst_width];
+			sample_data[x + y*dst_width] = 255 - (char)(city_per_pixel[x + y*dst_width] / 10.0 * 255);
 		}
 	}
+	cv::Mat sample_img(dst_height, dst_width, src.type(), sample_data);
 
 	// deploy city
 	int count = 0;
@@ -76,6 +80,12 @@ int main() {
 		writing_file << (i+1) << " " << city_array[i][0] << " " << city_array[i][1] << std::endl;
 	}
 	writing_file << "EOF" << std::endl;
+
+	// show sample image
+	cv::namedWindow("sample");
+	cv::imshow("sample", sample_img);
+	cv::waitKey();
+	delete sample_data;
 
 	// finalize
 	delete[] city_array;
