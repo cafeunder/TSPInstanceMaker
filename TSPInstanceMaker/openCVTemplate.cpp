@@ -14,8 +14,11 @@ int main() {
 	// read image file
 	cv::Mat src = cv::imread("img/miku3.png", 0);
 
-	// grid size
+	// setting
+	int require_city_num = 10000;
 	int grid_size = 8;
+
+	// grid size
 	int dst_width = src.size().width / grid_size;
 	int dst_height = src.size().height / grid_size;
 
@@ -35,15 +38,20 @@ int main() {
 	}
 	cv::Mat ave(dst_height, dst_width, src.type(), data);
 
-	// calc number of city
+	// calc ganma
+	double average_city_per_pixel = (1 - cv::mean(src).val[0] / 255.0);
+	double ganma = (double)require_city_num / (dst_height * dst_width) / average_city_per_pixel;
+	if (ganma < 1) { ganma = 1; }
+
+	// calc number of city per pixel
 	int city_num = 0;
-	int ganma = 15;
 	int* city_per_pixel = new int[dst_width * dst_height];
 	char* sample_data = new char[dst_width * dst_height];
 	for (int y = 0; y < dst_height; y++) {
 		for (int x = 0; x < dst_width; x++) {
-			int g = ganma - (int)((ganma + 1) * (ave.data[x + y*dst_width] / 255.0));
-			city_per_pixel[x + y*dst_width] = (int)(1 / 3.0 * g * g);
+			int g = (int)(ganma * (1 - (ave.data[x + y*dst_width] / 255.0)));
+			// city_per_pixel[x + y*dst_width] = (int)(1 / 3.0 * g * g);
+			city_per_pixel[x + y*dst_width] = g;
 			city_num += city_per_pixel[x + y*dst_width];
 			sample_data[x + y*dst_width] = 255 - (char)(city_per_pixel[x + y*dst_width] / 10.0 * 255);
 		}
@@ -70,7 +78,7 @@ int main() {
 
 	// output tsp file
 	std::ofstream writing_file;
-	writing_file.open("output.tsp", std::ios::out);
+	writing_file.open("tsp/output.tsp", std::ios::out);
 	writing_file << "NAME : output" << std::endl;
 	writing_file << "TYPE : TSP" << std::endl;
 	writing_file << "DIMENSION : " << city_num << std::endl;
