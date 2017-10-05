@@ -15,7 +15,7 @@
 //|===================================================================|//
 #pragma comment(lib, "opencv_core"            CV_VERSION_STR CV_EXT_STR)
 #pragma comment(lib, "opencv_highgui"        CV_VERSION_STR CV_EXT_STR)
-//#pragma comment(lib, "opencv_imgproc"  CV_VERSION_STR CV_EXT_STR)
+#pragma comment(lib, "opencv_imgproc"  CV_VERSION_STR CV_EXT_STR)
 //#pragma comment(lib, "opencv_calib3d"  CV_VERSION_STR CV_EXT_STR)
 //#pragma comment(lib, "opencv_objdetect"  CV_VERSION_STR CV_EXT_STR)
 //#pragma comment(lib, "opencv_gpu"   CV_VERSION_STR CV_EXT_STR)
