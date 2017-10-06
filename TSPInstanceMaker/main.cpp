@@ -33,7 +33,6 @@ void grid_based_stipple(
 
 	// calc average image
 	char* ave_data = new char[dst_width * dst_height];
-	char min = 255;
 	cv::Rect rect(0, 0, grid_size, grid_size);
 	for (int y = 0; y < dst_height; y++) {
 		for (int x = 0; x < dst_width; x++) {
@@ -48,7 +47,7 @@ void grid_based_stipple(
 	cv::Mat ave(dst_height, dst_width, img.type(), ave_data);
 
 	// calc ganma
-	double average_city_per_pixel = (1 - cv::mean(img).val[0] / 255.0);
+	double average_city_per_pixel = cv::mean(img).val[0] / 255.0;
 	double ganma = (use_improve_higher_contrast) ?
 		sqrt((double)require_city_num / (dst_height * dst_width)) / (average_city_per_pixel) :
 		(double)require_city_num / (dst_height * dst_width) / (average_city_per_pixel);
@@ -59,7 +58,7 @@ void grid_based_stipple(
 	int* city_per_pixel = new int[dst_width * dst_height];
 	for (int y = 0; y < dst_height; y++) {
 		for (int x = 0; x < dst_width; x++) {
-			int g = (int)(ganma * (1 - (ave.data[x + y*dst_width] / 255.0)));
+			int g = (int)(ganma * (ave.data[x + y*dst_width] / 255.0));
 			city_per_pixel[x + y*dst_width] = (use_improve_higher_contrast) ? (int)(1 / 3.0 * g * g) : g;
 			city_num += city_per_pixel[x + y*dst_width];
 		}
@@ -103,6 +102,40 @@ void output(InstanceData& instance, std::string filename) {
 	writing_file.close();
 }
 
+std::vector<std::string> split_string(const std::string &str, char sep) {
+	std::vector<std::string> v;
+	std::stringstream ss(str);
+	std::string buffer;
+	while (std::getline(ss, buffer, sep)) {
+		v.push_back(buffer);
+	}
+	return v;
+}
+
+// input file
+void input(InstanceData* OUT_instance, std::string filename) {
+	std::ifstream reading_file;
+
+	reading_file.open(filename);
+	std::string str;
+	bool coord = false;
+	while (std::getline(reading_file, str)) {
+		if (str == "EOF") { break; }
+
+		if (coord) {
+			std::vector<std::string> record = split_string(str, ' ');
+			OUT_instance->cityPosition.push_back(cv::Point2f(stof(record[1]), stof(record[2])));
+		}
+
+		if (str == "NODE_COORD_SECTION") {
+			coord = true;
+		}
+	}
+	reading_file.close();
+
+	OUT_instance->cityNum = OUT_instance->cityPosition.size();
+}
+
 // draw point
 void draw_point(cv::Mat& img, cv::Point2f p, cv::Scalar color) {
 	circle(img, p, 1, color, -1);
@@ -123,17 +156,58 @@ void draw_voronoi(cv::Mat& img, std::vector<std::vector<cv::Point2f>> facetList)
 	}
 }
 
+// calculate centroid
+cv::Point2f calc_region_centroid(cv::Mat& img, std::vector<cv::Point2f> regionFacet) {
+	std::vector<cv::Point> points;
+	for (auto& p : regionFacet) { points.push_back(p); }
+
+	// create mask
+	cv::Mat mask(img.size().height, img.size().width, 0);
+	cv::Mat region_image;
+	cv::fillConvexPoly(mask, &points[0], points.size(), cv::Scalar(255), 8);
+	img.copyTo(region_image, mask);
+
+	// calculate centroid
+	cv::Moments mu = cv::moments(region_image, false);
+	cv::Point2f result = cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+
+	// If the region is filled with black (white in the source image), The result is nan
+	if (isnan(result.x)) {
+		// calculate the centroid of the mask
+		cv::Moments mu = cv::moments(mask, false);
+		result = cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
+	}
+
+	/*
+	cv::namedWindow("mask");
+	cv::imshow("mask", mask);
+
+	cv::namedWindow("dst");
+	cv::imshow("dst", region_image);
+
+	cv::Mat out = cv::imread("img/miku32.png", 1);
+	draw_point(out, result, cv::Scalar(0, 0, 255));
+	cv::namedWindow("voronoi");
+	cv::imshow("voronoi", out);
+
+	std::cout << result.x << "," << result.y << std::endl;
+	*/
+	return result;
+}
+
 int main() {
 	std::random_device rnd;
 	std::mt19937 mt(rnd());
 
-	// read image file
+	// read source image (nega)
 	cv::string img_name = "img/miku32.png";
 	cv::Mat src = cv::imread(img_name, 0);
+	src = ~src;
 
-	// grid based stipple
 	InstanceData instance;
+	// grid based stipple
 	grid_based_stipple(instance, src, mt, 30000, 8, true);
+	std::cout << instance.cityNum << std::endl;
 
 	// create subdiv
 	cv::Size size = src.size();
@@ -147,12 +221,21 @@ int main() {
 	std::vector<cv::Point2f> facetCenters;
 	subdiv.getVoronoiFacetList(idList, facetList, facetCenters);
 
+	// calculate centroid voronoi region
+	std::vector<cv::Point2f> centroidList;
+	for (auto& trig : facetList) {
+		centroidList.push_back(calc_region_centroid(src, trig));
+	}
+
 	// draw voronoi region
 	cv::Mat out = cv::imread(img_name, 1);
+	draw_voronoi(out, facetList);
 	for (auto& point : instance.cityPosition) {
 		draw_point(out, point, cv::Scalar(0, 0, 255));
 	}
-	draw_voronoi(out, facetList);
+	for (auto& point : centroidList) {
+		draw_point(out, point, cv::Scalar(255, 0, 0));
+	}
 
 	cv::namedWindow("voronoi");
 	cv::imshow("voronoi", out);
