@@ -84,11 +84,24 @@ void grid_based_stipple(
 	delete ave_data;
 }
 
+std::vector<std::string> split_string(const std::string &str, char sep) {
+	std::vector<std::string> v;
+	std::stringstream ss(str);
+	std::string buffer;
+	while (std::getline(ss, buffer, sep)) {
+		v.push_back(buffer);
+	}
+	return v;
+}
+
 // output file
-void output(InstanceData& instance, std::string filename) {
+void output(InstanceData& instance, std::string instance_name) {
+	std::ostringstream filename;
+	filename << "tsp/" << instance_name << instance.cityNum << ".tsp";
+
 	std::ofstream writing_file;
 
-	writing_file.open(filename, std::ios::out);
+	writing_file.open(filename.str(), std::ios::out);
 	writing_file << "NAME : output" << std::endl;
 	writing_file << "TYPE : TSP" << std::endl;
 	writing_file << "DIMENSION : " << instance.cityNum << std::endl;
@@ -100,16 +113,6 @@ void output(InstanceData& instance, std::string filename) {
 	}
 	writing_file << "EOF" << std::endl;
 	writing_file.close();
-}
-
-std::vector<std::string> split_string(const std::string &str, char sep) {
-	std::vector<std::string> v;
-	std::stringstream ss(str);
-	std::string buffer;
-	while (std::getline(ss, buffer, sep)) {
-		v.push_back(buffer);
-	}
-	return v;
 }
 
 // input file
@@ -163,6 +166,10 @@ cv::Point2f calc_region_centroid(cv::Mat& img, std::vector<cv::Point2f> regionFa
 
 	// create mask
 	cv::Mat mask(img.size().height, img.size().width, 0);
+	for (int i = 0; i < img.size().height * img.size().width; i++) {
+		mask.data[i] = 0;
+	}
+
 	cv::Mat region_image;
 	cv::fillConvexPoly(mask, &points[0], points.size(), cv::Scalar(255), 8);
 	img.copyTo(region_image, mask);
@@ -178,21 +185,25 @@ cv::Point2f calc_region_centroid(cv::Mat& img, std::vector<cv::Point2f> regionFa
 		result = cv::Point2f(mu.m10 / mu.m00, mu.m01 / mu.m00);
 	}
 
-	/*
-	cv::namedWindow("mask");
-	cv::imshow("mask", mask);
-
-	cv::namedWindow("dst");
-	cv::imshow("dst", region_image);
-
-	cv::Mat out = cv::imread("img/miku32.png", 1);
-	draw_point(out, result, cv::Scalar(0, 0, 255));
-	cv::namedWindow("voronoi");
-	cv::imshow("voronoi", out);
-
-	std::cout << result.x << "," << result.y << std::endl;
-	*/
 	return result;
+}
+
+std::vector<int> idList;
+std::vector<std::vector<cv::Point2f>> facetList;
+std::vector<cv::Point2f> facetCenters;
+
+// centroid voronoi stipple
+void centroid_voronoi_stipple(InstanceData* instance, cv::Subdiv2D* subdiv, cv::Mat img) {
+	// voronoi division
+	subdiv->getVoronoiFacetList(idList, facetList, facetCenters);
+
+	// calculate centroid voronoi region
+	std::vector<cv::Point2f> centroidList;
+	for (auto& trig : facetList) {
+		centroidList.push_back(calc_region_centroid(img, trig));
+	}
+
+	instance->cityPosition = centroidList;
 }
 
 int main() {
@@ -212,39 +223,36 @@ int main() {
 	// create subdiv
 	cv::Size size = src.size();
 	cv::Rect rect(0, 0, size.width, size.height);
-	cv::Subdiv2D subdiv(rect);
-	subdiv.insert(instance.cityPosition);
 
-	// voronoi division
-	std::vector<int> idList;
-	std::vector<std::vector<cv::Point2f>> facetList;
-	std::vector<cv::Point2f> facetCenters;
-	subdiv.getVoronoiFacetList(idList, facetList, facetCenters);
+	cv::Subdiv2D subdiv;
 
-	// calculate centroid voronoi region
-	std::vector<cv::Point2f> centroidList;
-	for (auto& trig : facetList) {
-		centroidList.push_back(calc_region_centroid(src, trig));
+	// centroid voronoi stipple
+	for (int i = 0; i < 100; i++) {
+		// draw voronoi region (DEBUG)
+		std::cout << i << std::endl;
+
+		// create subdiv
+		subdiv.initDelaunay(rect);
+		subdiv.insert(instance.cityPosition);
+		
+		// centroid voronoi stipple
+		centroid_voronoi_stipple(&instance, &subdiv, src);
+
+		// draw centroid (DEBUG)
+		cv::Mat dst;
+		cv::cvtColor(~src, dst, CV_GRAY2BGR);
+		draw_voronoi(dst, facetList);
+		for (auto& point : facetCenters) {
+			draw_point(dst, point, cv::Scalar(0, 0, 255));
+		}
+		for (auto& point : instance.cityPosition) {
+			draw_point(dst, point, cv::Scalar(255, 0, 0));
+		}
+
+		std::ostringstream filename;
+		filename << i << ".png";
+		cv::imwrite(filename.str(), dst);
 	}
-
-	// draw voronoi region
-	cv::Mat out = cv::imread(img_name, 1);
-	draw_voronoi(out, facetList);
-	for (auto& point : instance.cityPosition) {
-		draw_point(out, point, cv::Scalar(0, 0, 255));
-	}
-	for (auto& point : centroidList) {
-		draw_point(out, point, cv::Scalar(255, 0, 0));
-	}
-
-	cv::namedWindow("voronoi");
-	cv::imshow("voronoi", out);
-	cv::waitKey();
-
-	// output tsp file
-	std::ostringstream filename;
-	filename << "tsp/out" << instance.cityNum << ".tsp";
-	output(instance, filename.str());
 
 	return 0;
 }
