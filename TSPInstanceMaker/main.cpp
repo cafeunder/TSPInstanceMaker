@@ -252,6 +252,11 @@ int main() {
 		std::ostringstream filename;
 		filename << i << ".png";
 		cv::imwrite(filename.str(), dst);
+
+		filename.str("");
+		filename.clear(std::stringstream::goodbit);
+		filename << "out" << i << "_";
+		output(instance, filename.str());
 	}
 
 	return 0;

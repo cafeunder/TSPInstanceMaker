@@ -1,5 +1,7 @@
 # user define
-tsp/
+*.tsp
+*.tour
+*.pdf
 img/
 
 # Windows image file caches
