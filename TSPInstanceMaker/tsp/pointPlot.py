@@ -20,39 +20,20 @@ def read_tsp_file(filename):
 
 	return cities
 
-def read_tour_file(filename):
-	f = open(filename, "r")
-	tour = []
-	readCity = False
-	for line in f:
-		line = line[:-1]
-		if line == "-1":
-			break
-
-		if readCity:
-			tour.append(int(line) - 1)
-
-		if line == "TOUR_SECTION":
-			readCity = True
-
-	return tour
-
 if __name__ == "__main__":
-	print(sys.argv[1])
 	name = sys.argv[1]
 	tsp = read_tsp_file(name + ".tsp")
-	tour = read_tour_file(name + ".tour")
 
 	tour_coord_x = []
 	tour_coord_y = []
-	for city in tour:
-		tour_coord_x.append(tsp[city][0])
-		tour_coord_y.append(tsp[city][1])
+	for city in tsp:
+		tour_coord_x.append(city[0])
+		tour_coord_y.append(city[1])
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, aspect='equal')
 
-	plt.plot(tour_coord_x, tour_coord_y, linewidth=.1, color="#000000")
+	plt.plot(tour_coord_x, tour_coord_y, marker="o", markersize=.1, linewidth=0, color="#000000")
 	plt.xlim(min(tour_coord_x), max(tour_coord_x))
 	plt.ylim(max(tour_coord_y), min(tour_coord_y))
 
@@ -65,7 +46,6 @@ if __name__ == "__main__":
 	ax.spines["bottom"].set_color("None")
 
 	plt.savefig(name + ".pdf", bbox_inches="tight", pad_inches=0.0)
-	plt.savefig(name + ".png", bbox_inches="tight", pad_inches=0.0, dpi=300)
 	plt.show()
 
 	plt.close()
