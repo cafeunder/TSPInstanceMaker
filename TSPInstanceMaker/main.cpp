@@ -321,10 +321,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	std::cout << "blank remove" << std::endl;
 	subdiv.initDelaunay(rect);
 	subdiv.insert(instance.cityPosition);
 	remove_blank_region(&instance, &subdiv, src);
-	std::cout << "blank remove" << std::endl;
 	output(instance, OUT_NAME);
 
 	// show output image
