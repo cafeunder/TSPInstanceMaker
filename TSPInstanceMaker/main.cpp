@@ -258,18 +258,27 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 	filename.str("");
 	filename.clear(std::stringstream::goodbit);
 	filename << "out" << id << "_";
-	output(instance, filename.str());
+	// output(instance, filename.str());
 }
 
 int main(int argc, char *argv[]) {
-	// option
+	// === option definition === //
+	// image file path
 	const cv::string IMG_PATH = "img/miku32.png";
-	const cv::string TSP_PATH = "";	// If do not read the tsp file, specify 0.
+	// initial tsp file path (If do not read the tsp file, specify empty string "")
+	const cv::string TSP_PATH = "";
+	// output tsp name
 	const cv::string OUT_NAME = "mk";
-	const int REQUIRE_CITY = 47000;
+	// number of cities requested (In most cases, the number of cities output will be less than the specified number)
+	const int REQUEST_CITY = 47000;
+	// grid size used in grid-based algorithm
 	const int GRID_SIZE = 8;
+	// number of iterations of voronoi stippling algorithm
 	const int ITERATION_NUM = 10;
+	// debug output?
 	const bool DEBUG_OUTPUT = true;
+
+
 
 	// random
 	std::random_device rnd;
@@ -282,7 +291,7 @@ int main(int argc, char *argv[]) {
 	InstanceData instance;
 	if (TSP_PATH == "") {
 		// grid based stipple
-		grid_based_stipple(instance, src, mt, REQUIRE_CITY, GRID_SIZE, false);
+		grid_based_stipple(instance, src, mt, REQUEST_CITY, GRID_SIZE, false);
 		std::cout << "cityNum : " << instance.cityNum << std::endl;
 		if (DEBUG_OUTPUT) {
 			cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
