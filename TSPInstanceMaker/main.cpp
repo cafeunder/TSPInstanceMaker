@@ -293,17 +293,19 @@ int main(int argc, char *argv[]) {
 		// grid based stipple
 		grid_based_stipple(instance, src, mt, REQUEST_CITY, GRID_SIZE, false);
 		std::cout << "cityNum : " << instance.cityNum << std::endl;
-		if (DEBUG_OUTPUT) {
-			cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
-			// cv::cvtColor(~src, dst, CV_GRAY2BGR);
-			for (auto& point : instance.cityPosition) {
-				draw_point(dst, point, cv::Scalar(255, 0, 0));
-			}
-			cv::imwrite("DEBUG/0.png", dst);
-		}
 	} else {
 		// read tspfile
 		input(&instance, TSP_PATH);
+	}
+
+	// debug output
+	if (DEBUG_OUTPUT) {
+		cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+		// cv::cvtColor(~src, dst, CV_GRAY2BGR);
+		for (auto& point : instance.cityPosition) {
+			draw_point(dst, point, cv::Scalar(255, 0, 0));
+		}
+		cv::imwrite("DEBUG/0.png", dst);
 	}
 
 	// create subdiv
