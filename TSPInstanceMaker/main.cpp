@@ -209,8 +209,7 @@ void centroid_voronoi_stipple(InstanceData* instance, cv::Subdiv2D* subdiv, cv::
 		centroidList.push_back(calc_region_centroid(img, trig));
 
 		// DEBUG
-		//if (count != 0 && count%prog == 0) { std::cout << "*"; } count++;
-		if (count != 0 && count % 1000 == 0) { std::cout << count << std::endl; } count++;
+		if (count != 0 && count%prog == 0) { std::cout << "*"; } count++;
 	}
 
 	instance->cityPosition = centroidList;
@@ -253,7 +252,7 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 	}
 
 	std::ostringstream filename;
-	filename << id << ".png";
+	filename << "DEBUG/" << id << ".png";
 	cv::imwrite(filename.str(), dst);
 
 	filename.str("");
@@ -262,30 +261,50 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 	output(instance, filename.str());
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+	// option
+	const cv::string IMG_PATH = "img/miku32.png";
+	const cv::string TSP_PATH = "";	// If do not read the tsp file, specify 0.
+	const cv::string OUT_NAME = "mk";
+	const int REQUIRE_CITY = 47000;
+	const int GRID_SIZE = 8;
+	const int ITERATION_NUM = 10;
+	const bool DEBUG_OUTPUT = true;
+
+	// random
 	std::random_device rnd;
 	std::mt19937 mt(rnd());
 
 	// read source image (nega)
-	cv::string img_name = "img/miku_facewhite.png";
-	cv::Mat src = cv::imread(img_name, 0);
+	cv::Mat src = cv::imread(IMG_PATH, 0);
 	src = ~src;
 
 	InstanceData instance;
-	// grid based stipple
-	grid_based_stipple(instance, src, mt, 47000, 8, false);
-	std::cout << "cityNum : " << instance.cityNum << std::endl;
-
-	DEBUG_output(src, instance);
-	// input(&instance, "tsp/out.tsp");
+	if (TSP_PATH == "") {
+		// grid based stipple
+		grid_based_stipple(instance, src, mt, REQUIRE_CITY, GRID_SIZE, false);
+		std::cout << "cityNum : " << instance.cityNum << std::endl;
+		if (DEBUG_OUTPUT) {
+			cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+			// cv::cvtColor(~src, dst, CV_GRAY2BGR);
+			for (auto& point : instance.cityPosition) {
+				draw_point(dst, point, cv::Scalar(255, 0, 0));
+			}
+			cv::imwrite("DEBUG/0.png", dst);
+		}
+	} else {
+		// read tspfile
+		input(&instance, TSP_PATH);
+	}
 
 	// create subdiv
 	cv::Size size = src.size();
 	cv::Rect rect(0, 0, size.width, size.height);
 
 	cv::Subdiv2D subdiv;
+	int prog = (instance.cityNum == 0) ? 1 : instance.cityNum / 10;
 	// centroid voronoi stipple
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < ITERATION_NUM; i++) {
 		// draw voronoi region (DEBUG)
 		std::cout << i << std::endl;
 
@@ -297,20 +316,25 @@ int main() {
 		centroid_voronoi_stipple(&instance, &subdiv, src);
 
 		// draw centroid (DEBUG)
-		DEBUG_output(src, instance, (i+1));
+		if (DEBUG_OUTPUT) {
+			DEBUG_output(src, instance, (i + 1));
+		}
 	}
 
 	subdiv.initDelaunay(rect);
 	subdiv.insert(instance.cityPosition);
 	remove_blank_region(&instance, &subdiv, src);
+	std::cout << "blank remove" << std::endl;
+	output(instance, OUT_NAME);
 
 	// show output image
-	output(instance, "out");
-	cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
-	// cv::cvtColor(~src, dst, CV_GRAY2BGR);
-	for (auto& point : instance.cityPosition) {
-		draw_point(dst, point, cv::Scalar(255, 0, 0));
+	if (DEBUG_OUTPUT) {
+		cv::Mat dst(src.size(), CV_8UC3, cv::Scalar(255, 255, 255));
+		// cv::cvtColor(~src, dst, CV_GRAY2BGR);
+		for (auto& point : instance.cityPosition) {
+			draw_point(dst, point, cv::Scalar(255, 0, 0));
+		}
+		cv::imwrite("DEBUG/final.png", dst);
 	}
-	cv::imwrite("out.png", dst);
 	return 0;
 }
