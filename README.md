@@ -27,6 +27,8 @@ main()関数のoption specifyの部分を変更して実行します．
 `TSPInstanceMaker/util`にお役たちのpythonコードがあります．
 以下に説明を記します．なお，$で始まる行はコマンドライン上での使用方法を示しており，斜体は引数を意味します．
 
+---
+
 #### point_delete.py
 $python point_delete.py _tsp-file-path_
 
@@ -34,6 +36,23 @@ _tsp-file-path_ で指定したTSPインスタンスから，対話形式で都�
 **指定した座標に最も近い都市を削除していきます．プログラムを終了するときはendと入力してください．**
 
 **python3でないと，`input()`でエラーがでます．**
+
+---
+
+#### point_plot.py
+$python point_plot.py _tsp-file-path_
+
+_tsp-file-path_ で指定したTSPインスタンスを画像に出力します．
+実行には`matplotlib`が必要です．
+
+---
+
+#### scale_instance.py
+$python scale_instance.py _tsp-file-path_ _scale_
+
+_tsp-file-path_ で指定したTSPインスタンスの，全都市の座標を _scale_ 倍します．
+
+---
 
 #### specify_city_num.py
 $python specify_city_num.py _tsp-file-path_ _city-num_
