@@ -262,7 +262,7 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 }
 
 int main(int argc, char *argv[]) {
-	// === option definition === //
+	// === option specify === //
 	// image file path
 	const cv::string IMG_PATH = "img/miku3.png";
 	// initial tsp file path (If do not read the tsp file, specify empty string "")
