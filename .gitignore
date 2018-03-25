@@ -5,6 +5,8 @@
 *.png
 img/*
 !miku3.png
+__pycache__/
+*.pyc
 
 # Windows image file caches
 Thumbs.db

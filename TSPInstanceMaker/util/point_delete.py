@@ -1,29 +1,13 @@
 import os
 import sys
 import re
+from tsp_file_util import *
 
-def read_tsp_file(filename):
-	f = open(filename, "r")
-	cities = []
-	readCoord = False
-	for line in f:
-		line = line[:-1]
-		if line == "EOF":
-			break
-
-		if readCoord:
-			record = re.split(" +", line)
-			cities.append([float(record[1]), float(record[2])])
-
-		if line == "NODE_COORD_SECTION":
-			readCoord = True
-
-	return cities
 
 if __name__ == "__main__":
 	name = sys.argv[1]
 	tsp = read_tsp_file(name)
-	print(len(tsp))
+	print('To end this program, please enter "end"')
 
 	while True:
 		s = input("point(x y): ")

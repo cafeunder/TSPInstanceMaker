@@ -2,24 +2,8 @@ import os
 import sys
 import re
 import matplotlib.pyplot as plt
+from tsp_file_util import *
 
-def read_tsp_file(filename):
-	f = open(filename, "r")
-	cities = []
-	readCoord = False
-	for line in f:
-		line = line[:-1]
-		if line == "EOF":
-			break
-
-		if readCoord:
-			record = re.split(" +", line)
-			cities.append([float(record[1]), float(record[2])])
-
-		if line == "NODE_COORD_SECTION":
-			readCoord = True
-
-	return cities
 
 if __name__ == "__main__":
 	name = sys.argv[1]
@@ -47,7 +31,7 @@ if __name__ == "__main__":
 	ax.spines["bottom"].set_color("None")
 
 	base_name, _ = os.path.splitext(os.path.basename(name))
-	plt.savefig(base_name + ".pdf", bbox_inches="tight", pad_inches=0.0)
+	plt.savefig(base_name + ".png", bbox_inches="tight", pad_inches=0.0)
 	plt.show()
 
 	plt.close()

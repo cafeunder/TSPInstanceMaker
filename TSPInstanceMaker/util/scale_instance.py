@@ -1,23 +1,8 @@
 import os
 import sys
 import re
+from tsp_file_util import *
 
-def read_tsp_file(filename):
-	f = open(filename, "r")
-	cities = []
-	readCoord = False
-	for line in f:
-		if "EOF" in line:
-			break
-
-		if readCoord:
-			record = re.split(" +", line)
-			cities.append([float(record[1]), float(record[2])])
-
-		if "NODE_COORD_SECTION" in line:
-			readCoord = True
-
-	return cities
 
 if __name__ == "__main__":
 	name = sys.argv[1]
