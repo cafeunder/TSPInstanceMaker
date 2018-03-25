@@ -1,4 +1,4 @@
-# OpenCVTemplate
+# TSPInstanceMaker
 
 ## ENVIRONMENT
 opencv/C++ Windows x64 visual studio2010
