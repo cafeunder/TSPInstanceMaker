@@ -2,7 +2,9 @@
 *.tsp
 *.tour
 *.pdf
-img/
+*.png
+img/*
+!miku3.png
 
 # Windows image file caches
 Thumbs.db

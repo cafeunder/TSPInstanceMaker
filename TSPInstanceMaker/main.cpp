@@ -252,7 +252,7 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 	}
 
 	std::ostringstream filename;
-	filename << "DEBUG/" << id << ".png";
+	filename << "tmp/" << id << ".png";
 	cv::imwrite(filename.str(), dst);
 
 	filename.str("");
@@ -264,7 +264,7 @@ void DEBUG_output(cv::Mat& img, InstanceData& instance, int id = 0) {
 int main(int argc, char *argv[]) {
 	// === option definition === //
 	// image file path
-	const cv::string IMG_PATH = "img/miku32.png";
+	const cv::string IMG_PATH = "img/miku3.png";
 	// initial tsp file path (If do not read the tsp file, specify empty string "")
 	const cv::string TSP_PATH = "";
 	// output tsp name
@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
 		for (auto& point : instance.cityPosition) {
 			draw_point(dst, point, cv::Scalar(255, 0, 0));
 		}
-		cv::imwrite("DEBUG/0.png", dst);
+		cv::imwrite("tmp/0.png", dst);
 	}
 
 	// create subdiv
@@ -345,7 +345,7 @@ int main(int argc, char *argv[]) {
 		for (auto& point : instance.cityPosition) {
 			draw_point(dst, point, cv::Scalar(255, 0, 0));
 		}
-		cv::imwrite("DEBUG/final.png", dst);
+		cv::imwrite("tmp/final.png", dst);
 	}
 	return 0;
 }
