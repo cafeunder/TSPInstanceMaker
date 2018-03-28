@@ -15,6 +15,11 @@ visual studio 2017で実行してください．
 
 https://www.microsoft.com/ja-JP/download/details.aspx?id=40784
 
+「WindowsSDKバージョン8.1が見つかりませんでした。」と出て実行できない場合、
+以下のサイトを参考にSDKをインストールしてください。
+
+http://dxlib.o.oo7.jp/cgi/patiobbs/patio.cgi?mode=view&no=4107
+
 ### PROGRAM
 main()関数のoption specifyの部分を変更して実行します．
 実行時に必要な画像は`TSPInstanceMaker/img/`に入れてください．
